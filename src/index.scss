@@ -1,0 +1,10 @@
+*,
+*::before,
+*::after {
+  box-sizing: content-box;
+}
+
+html {
+  font-family: "Open Sans", sans-serif;
+  margin: 0;
+}
