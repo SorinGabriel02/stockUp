@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+
+import { MappedDataObj } from "../interfaces/MappedDataObj";
 import Chart from "./Chart";
 
 interface DisplayProps { }
@@ -13,8 +15,7 @@ interface Data {
 }
 
 const Display: React.FC<DisplayProps> = () => {
-    const [xValues, setXValues] = useState<string[]>([]);
-    const [yValues, setYValues] = useState<number[]>([]);
+    const [chartData, setChartData] = useState<MappedDataObj[] | []>([]);
 
     const getData = async (): Promise<void> => {
         const apiKey = "RX7L8D2IIGC3AR5S";
@@ -23,26 +24,26 @@ const Display: React.FC<DisplayProps> = () => {
         try {
             const response = await fetch(url);
             const data: Data = await response.json();
+            let mappedData: MappedDataObj[] | [] = [];
 
-            let mapXValues: string[] = [];
-            let mapYValues: number[] = [];
-            const dataObj = data["Time Series (Daily)"];
-
-            for (let day in dataObj) {
-                mapXValues.push(day);
-                mapYValues.push(+dataObj[day]["1. close"])
+            for (let key in data["Time Series (Daily)"]) {
+                mappedData = [...mappedData, {
+                    date: new Date(key),
+                    value: +data["Time Series (Daily)"][key]["4. close"]
+                }]
             }
-            setXValues(mapXValues);
-            setYValues(mapYValues);
+            setChartData(mappedData);
         } catch (error) {
             console.log(error);
         }
     }
 
+    console.log(chartData);
+
     return <div>
         <button onClick={getData}>Get Data</button>
         <section>
-            <Chart xValues={xValues} yValues={yValues} />
+            <Chart data={chartData} />
         </section>
     </div>
 }

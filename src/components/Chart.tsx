@@ -4,31 +4,70 @@ import * as d3 from "d3";
 import styles from "./Chart.module.scss";
 
 interface ChartProps {
-    xValues: string[];
-    yValues: number[];
+    data: {
+        date: Date;
+        value: number;
+    }[];
 }
 
-const Chart = ({ xValues, yValues }: ChartProps) => {
+const Chart = ({ data }: ChartProps) => {
     const svgRef = useRef(null);
     const pathRef = useRef(null);
     const xAxisRef = useRef(null);
     const yAxisRef = useRef(null);
 
-    const width = 800;
-    const height = 450;
     const margin = {
         top: 30,
         right: 30,
         bottom: 40,
         left: 40
     }
+    const width = 800;
+    const height = 450;
 
-    const draw = useCallback(() => {
-        const dataset = { xValues, yValues };
+    const draw = useCallback((data) => {
+        // X-Axis
+        const xMinMax: any = d3.extent(data.map((d: { date: Date; }) => d.date));
+        let x = d3
+            .scaleTime()
+            .domain(xMinMax)
+            .range([0 + margin.left, width - margin.right])
+            .nice();
 
-    }, [xValues, yValues])
+        const axisBottom: any = d3.axisBottom(x)
 
-    useEffect(() => { if (xValues) draw() }, [xValues, draw]);
+        d3.select(xAxisRef.current)
+            .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+            .call(axisBottom);
+
+        // Y-Axis
+        //const yMax: any = d3.max(data, (d: { value: number; }) => d.value);
+        const yMinMax: any = d3.extent(data.map((d: { value: number; }) => d.value));
+
+        let y = d3
+            .scaleLinear()
+            .domain(yMinMax)
+            .range([height - margin.bottom, 0 + margin.bottom]).nice();
+
+        const axisLeft: any = d3.axisLeft(y);
+
+        d3.select(yAxisRef.current).attr("transform", `translate(${margin.left})`).call(axisLeft);
+
+        // add line --> path
+        const line = d3.line<any>().x(d => x(d.date)).y(d => y(d.value))
+
+        d3.select(pathRef.current)
+            .datum(data)
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 2)
+            .attr("d", line)
+
+    }, [height, width, margin])
+
+    useEffect(() => { if (data) draw(data) }, [data, draw]);
+
+    console.log(data);
 
     return <svg
         className={styles.chart}
@@ -37,8 +76,8 @@ const Chart = ({ xValues, yValues }: ChartProps) => {
         viewBox={`0 0 ${width} ${height}`}
     >
         <path ref={pathRef}></path>
-        <g ref={yAxisRef}></g>
         <g ref={xAxisRef}></g>
+        <g ref={yAxisRef}></g>
     </svg>
 }
 
