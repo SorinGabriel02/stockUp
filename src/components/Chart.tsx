@@ -72,7 +72,7 @@ const Chart = ({ data }: ChartProps) => {
 
     useEffect(() => { if (data) draw(data) }, [data, draw]);
 
-    console.log(data);
+    // console.log(data);
 
     return <svg
         className={styles.chart}

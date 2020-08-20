@@ -41,7 +41,7 @@
   background-color: rgb(240, 255, 212);
   border: 2px solid rgb(255, 218, 138);
   border-radius: 8px;
-  outline: none;
+  outline: transparent;
   transition: box-shadow 0.2s linear;
   &:hover {
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
@@ -54,7 +54,7 @@
 
 .chartContainer {
   margin: 1%;
-  background-color: rgb(255, 231, 178);
+  background-color: rgba(249, 255, 197, 1);
   border: 1px solid $borderColor;
   box-shadow: 0 0 5px $shadowColor;
 }
