@@ -1,0 +1,15 @@
+@import "../styles/variables";
+
+.appFooter {
+  height: 6vmax;
+  margin: 0 auto;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid $borderColor;
+  box-shadow: 0 0 7px $shadowColor;
+  p {
+    text-align: center;
+  }
+}

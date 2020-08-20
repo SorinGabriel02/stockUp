@@ -1,0 +1,32 @@
+@import "../styles/variables";
+
+.mainHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  background-color: white;
+  border-bottom: 1px solid $borderColor;
+  box-shadow: 0 0 7px $shadowColor;
+  margin: 0;
+  h1,
+  h2 {
+    margin: 0;
+    text-shadow: 0 0 3px $shadowColor;
+  }
+}
+
+.arrow {
+  display: inline-block;
+  width: 4vmax;
+  color: orangered;
+  animation: arrow 2s ease infinite alternate-reverse;
+}
+
+@keyframes arrow {
+  from {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+  }
+  to {
+    transform: rotateX(30deg) rotateY(5deg) scale(1.1);
+  }
+}

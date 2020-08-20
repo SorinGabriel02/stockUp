@@ -1,0 +1,67 @@
+@import "../styles/variables";
+
+.searchForm {
+  display: flex;
+  flex-direction: column;
+  margin: 1%;
+  min-height: 22vh;
+  background: rgb(255, 255, 255);
+  border: 1px solid $borderColor;
+  background: linear-gradient(
+    295deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(249, 255, 197, 1) 50%,
+    rgba(255, 217, 138, 1) 100%
+  );
+  box-shadow: 0 0 5px $shadowColor;
+
+  input {
+    text-align: center;
+    padding: 0.5rem;
+    border-radius: 3px;
+    margin: 2vmax 2vmax;
+    align-self: center;
+    border: 3px solid rgba(255, 218, 138, 0.61);
+    transition: box-shadow 0.2s linear;
+  }
+  input:focus {
+    outline-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  }
+}
+
+.searchBtn {
+  letter-spacing: 0.08rem;
+  width: fit-content;
+  height: fit-content;
+  align-self: center;
+  padding: 0.9vmax 2.2vmax;
+  cursor: pointer;
+  margin: 1vmax 0 2vmax 0;
+  background-color: rgb(240, 255, 212);
+  border: 2px solid rgb(255, 218, 138);
+  border-radius: 8px;
+  outline: none;
+  transition: box-shadow 0.2s linear;
+  &:hover {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+  }
+  &:active {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    cursor: grab;
+  }
+}
+
+.chartContainer {
+  margin: 1%;
+  background-color: rgb(255, 231, 178);
+  border: 1px solid $borderColor;
+  box-shadow: 0 0 5px $shadowColor;
+}
+
+@media (min-width: 900px) {
+  .searchForm,
+  .chartContainer {
+    margin: 2% 11%;
+  }
+}

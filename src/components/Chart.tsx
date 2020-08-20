@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import * as d3 from "d3";
 
 import styles from "./Chart.module.scss";
@@ -15,12 +15,13 @@ const Chart = ({ data }: ChartProps) => {
     const pathRef = useRef(null);
     const xAxisRef = useRef(null);
     const yAxisRef = useRef(null);
+    const tooltipRef = useRef(null);
 
     const margin = {
         top: 30,
         right: 30,
         bottom: 40,
-        left: 40
+        left: 50
     }
     const width = 800;
     const height = 450;
@@ -59,9 +60,13 @@ const Chart = ({ data }: ChartProps) => {
         d3.select(pathRef.current)
             .datum(data)
             .attr("fill", "none")
+            .attr("class", "path")
             .attr("stroke", "steelblue")
-            .attr("stroke-width", 2)
+            .attr("stroke-width", 0)
             .attr("d", line)
+            .transition()
+            .duration(300)
+            .attr("stroke-width", 2);
 
     }, [height, width, margin])
 
@@ -76,9 +81,10 @@ const Chart = ({ data }: ChartProps) => {
         viewBox={`0 0 ${width} ${height}`}
     >
         <path ref={pathRef}></path>
-        <g ref={xAxisRef}></g>
-        <g ref={yAxisRef}></g>
+        <g className={styles.group} ref={xAxisRef}></g>
+        <g className={styles.group} ref={yAxisRef}></g>
+        <div ref={tooltipRef} ></div>
     </svg>
 }
 
-export default Chart;
+export default React.memo(Chart);
