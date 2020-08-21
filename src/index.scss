@@ -9,6 +9,8 @@ html {
 }
 
 body {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   background: rgb(255, 255, 255);
   background: linear-gradient(

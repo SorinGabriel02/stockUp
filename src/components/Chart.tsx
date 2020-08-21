@@ -18,7 +18,7 @@ const Chart = ({ data }: ChartProps) => {
     const tooltipRef = useRef(null);
 
     const margin = {
-        top: 30,
+        top: 10,
         right: 30,
         bottom: 40,
         left: 50
@@ -48,7 +48,7 @@ const Chart = ({ data }: ChartProps) => {
         let y = d3
             .scaleLinear()
             .domain(yMinMax)
-            .range([height - margin.bottom, 0 + margin.bottom]).nice();
+            .range([height - margin.bottom, 0 + margin.top]).nice();
 
         const axisLeft: any = d3.axisLeft(y);
 

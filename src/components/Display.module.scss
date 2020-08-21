@@ -57,6 +57,11 @@
   background-color: rgba(249, 255, 197, 1);
   border: 1px solid $borderColor;
   box-shadow: 0 0 5px $shadowColor;
+  h3 {
+    color: gray;
+    padding: 0.3rem 1rem;
+    margin: 0;
+  }
 }
 
 @media (min-width: 900px) {

@@ -5,6 +5,7 @@ import styles from "./Display.module.scss";
 
 import { MappedDataObj } from "../interfaces/MappedDataObj";
 import Chart from "./Chart";
+import CompanyInfo from "./CompanyInfo";
 import Backdrop from "./Backdrop";
 import Modal from "./Modal";
 
@@ -95,9 +96,10 @@ const Display: React.FC<DisplayProps> = () => {
             dispatch({ type: "companyInfo", payload: infoResponse.data });
 
             const dailyResponse = await axios.get(dailyUrl);
+            console.log(dailyResponse);
 
-            //const intraDayResponse = await axios.get(todayUrl);
-            //console.log(intraDayResponse.data);
+            const intraDayResponse = await axios.get(todayUrl);
+            console.log(intraDayResponse.data);
 
             const data: Data = await dailyResponse.data;
             let mappedData: MappedDataObj[] | [] = [];
@@ -123,10 +125,6 @@ const Display: React.FC<DisplayProps> = () => {
         dispatch({ type: "errorMessage", payload: "" })
     }
 
-    const infoGraphic = state.companyInfo && <p>{state.companyInfo.Name}</p>
-
-    console.log(state.companyInfo)
-
     return (<main>
         <Backdrop show={!!state.errorMessage} onClick={clearErrorMessage} />
         <Modal show={!!state.errorMessage} ><p>{state.errorMessage}</p>
@@ -137,11 +135,15 @@ const Display: React.FC<DisplayProps> = () => {
             <button className={styles.searchBtn}>Search</button>
         </form>
         <section className={styles.chartContainer}>
-            <div className={styles.info}>{infoGraphic}</div>
+            <h3>{state.companyInfo.Name}</h3>
             <Chart data={state.chartData} />
-            <div className={styles.companyData}>Company Data here</div>
+            {state.companyInfo.Symbol &&
+                <CompanyInfo
+                    currency={state.companyInfo.Currency}
+                    symbol={`${state.companyInfo.Exchange}:${state.companyInfo.Symbol}`}
+                />}
         </section>
-    </main>)
+    </main >)
 }
 
 export default Display;

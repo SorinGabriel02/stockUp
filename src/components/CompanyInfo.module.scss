@@ -1,0 +1,14 @@
+.info {
+  margin: 0;
+  padding: 0;
+  margin-bottom: 1vmax;
+  list-style: none;
+  display: flex;
+
+  li {
+    font-size: 0.7rem;
+    margin: 0;
+    padding-left: 0.8rem;
+    color: gray;
+  }
+}

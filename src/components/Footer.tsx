@@ -5,7 +5,7 @@ import styles from "./Footer.module.scss";
 const Footer = () => {
     return (
         <footer className={styles.appFooter}>
-            <p><sup>&copy;</sup>StockUp 2020</p>
+            <p>&copy;StockUp 2020</p>
         </footer>
     )
 }
