@@ -1,14 +1,33 @@
 .info {
-  margin: 0;
-  padding: 0;
   margin-bottom: 1vmax;
-  list-style: none;
-  display: flex;
 
+  display: flex;
+  flex-direction: column;
+  ul {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    list-style: none;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
   li {
     font-size: 0.7rem;
     margin: 0;
-    padding-left: 0.8rem;
+    padding: 0 0.8rem;
     color: gray;
+  }
+  .infoHeading {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap-reverse;
+    margin: 0;
+  }
+  .price {
+    color: black;
+    span {
+      color: gray;
+      font-size: small;
+    }
   }
 }

@@ -1,0 +1,19 @@
+.navContainer {
+  list-style: none;
+  display: flex;
+  margin: 0 1rem;
+  padding: 0;
+  justify-content: space-around;
+  border-bottom: 1px solid grey;
+  li {
+    color: gray;
+    cursor: pointer;
+    margin: 0;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+  }
+  .active {
+    color: black;
+    border-bottom: 2px solid black;
+  }
+}

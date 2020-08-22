@@ -8,12 +8,18 @@ import Chart from "./Chart";
 import CompanyInfo from "./CompanyInfo";
 import Backdrop from "./Backdrop";
 import Modal from "./Modal";
+import ChartNav from "./ChartNav";
 
 interface DisplayProps { }
 
 interface Data {
     "Meta Data": object;
-    "Time Series (Daily)": {
+    "Time Series (15min)"?: {
+        [key: string]: {
+            [key: string]: string;
+        };
+    };
+    "Time Series (Daily)"?: {
         [key: string]: {
             [key: string]: string;
         };
@@ -23,10 +29,12 @@ interface Data {
 interface StateObj {
     isLoading: boolean;
     chartData: MappedDataObj[];
-    getDaily: boolean;
     symbol: string;
     companyInfo: object;
+    intraDay: Data | {};
+    daily: Data | {};
     errorMessage: string;
+    dataChunk: "lastDay" | "fiveDays" | "oneMonth" | "threeMonths" | "sixMonths" | "oneYear" | "maximum";
 }
 
 interface ActionObj {
@@ -36,11 +44,13 @@ interface ActionObj {
 
 const initialState: StateObj = {
     isLoading: false,
+    intraDay: {},
+    daily: {},
     chartData: [],
     companyInfo: {},
-    getDaily: true,
     symbol: "",
-    errorMessage: ""
+    errorMessage: "",
+    dataChunk: "lastDay"
 }
 
 const displayReducer = (state: StateObj, action: ActionObj) => {
@@ -63,7 +73,10 @@ const displayReducer = (state: StateObj, action: ActionObj) => {
         case "companyInfo":
             return {
                 ...state,
-                companyInfo: action.payload
+                companyInfo: {
+                    ...state.companyInfo,
+                    ...action.payload
+                }
             }
         case "errorMessage":
             return {
@@ -76,17 +89,21 @@ const displayReducer = (state: StateObj, action: ActionObj) => {
 }
 
 const Display: React.FC<DisplayProps> = () => {
+    const apiKey = "asdfasdfasdf";
+
+
     const [state, dispatch] = useReducer(displayReducer, initialState);
+
+    const mapDataChunk = (dataArray: MappedDataObj[]) => {
+        dispatch({ type: "chartData", payload: dataArray });
+    };
 
     const getData = useCallback(async (event): Promise<void> => {
         event.preventDefault();
-        const apiKey = "asdfasdfasdf";
-        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${state.symbol}&apikey=${apiKey}`
         const infoUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${state.symbol}&apikey=${apiKey}`
-        const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${state.symbol}&interval=15min&apikey=${apiKey}`;
         try {
             const infoResponse = await axios.get(infoUrl);
-            console.log(infoResponse);
+            // console.log(infoResponse);
             if (infoResponse.data.Note) {
                 return dispatch({ type: "errorMessage", payload: "Server error. Please try again later." })
             }
@@ -95,27 +112,14 @@ const Display: React.FC<DisplayProps> = () => {
             }
             dispatch({ type: "companyInfo", payload: infoResponse.data });
 
-            const dailyResponse = await axios.get(dailyUrl);
-            console.log(dailyResponse);
+            handleRequest(state.dataChunk);
 
-            const intraDayResponse = await axios.get(todayUrl);
-            console.log(intraDayResponse.data);
-
-            const data: Data = await dailyResponse.data;
-            let mappedData: MappedDataObj[] | [] = [];
-            for (let key in data["Time Series (Daily)"]) {
-                mappedData = [...mappedData, {
-                    date: new Date(key),
-                    value: +data["Time Series (Daily)"][key]["4. close"]
-                }]
-            }
             dispatch({ type: "symbol", payload: "" });
 
-            dispatch({ type: "chartData", payload: mappedData });
         } catch (error) {
             console.log(error);
         }
-    }, [state.symbol]);
+    }, [state.symbol, state.dataChunk]);
 
     const handleSymbolChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         return dispatch({ type: "symbol", payload: event.target.value });
@@ -125,23 +129,76 @@ const Display: React.FC<DisplayProps> = () => {
         dispatch({ type: "errorMessage", payload: "" })
     }
 
+    const handleRequest = async (chunk: string) => {
+        const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${state.symbol}&interval=15min&apikey=${apiKey}`;
+        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${state.symbol}&apikey=${apiKey}`
+        let response;
+        try {
+            switch (state.dataChunk) {
+                case "lastDay": {
+
+                    response = await axios.get(todayUrl);
+
+
+                    if (!response.data["Time Series (15min)"]) {
+                        dispatch({ type: "errorMessage", payload: "Data could not be retrieved. Please try again later" });
+                    }
+
+                    let dataToMap = [];
+                    const dates: number[] = [];
+                    for (let key in response.data["Time Series (15min)"]) {
+                        dates.push(new Date(key).getTime());
+                        dataToMap
+                            .push({ date: new Date(key), value: +response.data["Time Series (15min)"][key]["4. close"] });
+                    }
+                    // get the last day (previous day) from the response and filter array
+                    const maxDate = new Date(Math.max(...dates));
+                    dataToMap = dataToMap.filter(entry => entry.date.getDate() === maxDate.getDate());
+
+                    // add the last price from previous day to state.companyInfo
+                    const prevClose = dataToMap.find(el => el.date.toString() === maxDate.toString());
+                    if (prevClose) dispatch({ type: "companyInfo", payload: { prevClose: prevClose.value.toFixed(2) } })
+
+                    mapDataChunk(dataToMap);
+                    break;
+                }
+                default:
+                    return;
+            }
+        } catch (e) {
+            if (e) dispatch({ type: "errorMessage", payload: "We could not retrieve any data. Please try again later." })
+        }
+    }
+
+    console.log(state.companyInfo)
     return (<main>
         <Backdrop show={!!state.errorMessage} onClick={clearErrorMessage} />
         <Modal show={!!state.errorMessage} ><p>{state.errorMessage}</p>
-            <button className={styles.searchBtn} onClick={clearErrorMessage}>Close</button>
+            <button
+                className={styles.searchBtn}
+                onClick={clearErrorMessage}
+            >Close</button>
         </Modal>
         <form className={styles.searchForm} onSubmit={e => getData(e)}>
-            <input required maxLength={20} type="text" value={state.symbol} onChange={e => handleSymbolChange(e)} placeholder="Company symbol..." />
+            <input
+                required
+                maxLength={20}
+                type="text"
+                value={state.symbol}
+                onChange={e => handleSymbolChange(e)} placeholder="Company symbol..."
+            />
             <button className={styles.searchBtn}>Search</button>
         </form>
         <section className={styles.chartContainer}>
-            <h3>{state.companyInfo.Name}</h3>
+            {state.companyInfo.Symbol && state.companyInfo.prevClose &&
+                <React.Fragment>
+                    <CompanyInfo
+                        info={state.companyInfo}
+                    />
+                    <ChartNav handleRequest={handleRequest} dataChunk={state.dataChunk} />
+                </React.Fragment>}
+
             <Chart data={state.chartData} />
-            {state.companyInfo.Symbol &&
-                <CompanyInfo
-                    currency={state.companyInfo.Currency}
-                    symbol={`${state.companyInfo.Exchange}:${state.companyInfo.Symbol}`}
-                />}
         </section>
     </main >)
 }

@@ -2,12 +2,10 @@ import React, { useRef, useEffect, useCallback } from "react";
 import * as d3 from "d3";
 
 import styles from "./Chart.module.scss";
+import { MappedDataObj } from "../interfaces/MappedDataObj";
 
 interface ChartProps {
-    data: {
-        date: Date;
-        value: number;
-    }[];
+    data: MappedDataObj[];
 }
 
 const Chart = ({ data }: ChartProps) => {
@@ -24,11 +22,13 @@ const Chart = ({ data }: ChartProps) => {
         left: 50
     }
     const width = 800;
-    const height = 450;
+    const height = 350;
 
     const draw = useCallback((data) => {
+        console.log(data);
         // X-Axis
         const xMinMax: any = d3.extent(data.map((d: { date: Date; }) => d.date));
+
         let x = d3
             .scaleTime()
             .domain(xMinMax)
