@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useCallback } from "react";
+import React, { useReducer, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 
 import styles from "./Display.module.scss";
@@ -31,7 +31,7 @@ interface StateObj {
     chartData: MappedDataObj[];
     symbol: string;
     companyInfo: object;
-    intraDay: Data | {};
+    lastDay: Data | {};
     daily: Data | {};
     errorMessage: string;
     dataChunk: "lastDay" | "fiveDays" | "oneMonth" | "threeMonths" | "sixMonths" | "oneYear" | "maximum";
@@ -44,7 +44,7 @@ interface ActionObj {
 
 const initialState: StateObj = {
     isLoading: false,
-    intraDay: {},
+    lastDay: {},
     daily: {},
     chartData: [],
     companyInfo: {},
@@ -78,6 +78,12 @@ const displayReducer = (state: StateObj, action: ActionObj) => {
                     ...action.payload
                 }
             }
+        case "dataChunk": {
+            return {
+                ...state,
+                dataChunk: action.payload
+            }
+        }
         case "errorMessage":
             return {
                 ...state,
@@ -90,87 +96,95 @@ const displayReducer = (state: StateObj, action: ActionObj) => {
 
 const Display: React.FC<DisplayProps> = () => {
     const apiKey = "asdfasdfasdf";
-
-
+    const inputRef = useRef<HTMLInputElement>(null);
     const [state, dispatch] = useReducer(displayReducer, initialState);
 
     const mapDataChunk = (dataArray: MappedDataObj[]) => {
         dispatch({ type: "chartData", payload: dataArray });
     };
 
-    const getData = useCallback(async (event): Promise<void> => {
-        event.preventDefault();
-        const infoUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${state.symbol}&apikey=${apiKey}`
+    const handleRequest = useCallback(async (chunk: string) => {
+        const oneDayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${state.companyInfo.Symbol || state.symbol}&interval=15min&apikey=${apiKey}`;
+        const fiveDaysUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${state.companyInfo.Symbol}&interval=60min&apikey=${apiKey}`;
+        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${state.companyInfo.Symbol}&apikey=${apiKey}`
+        dispatch({ type: "dataChunk", payload: chunk });
         try {
-            const infoResponse = await axios.get(infoUrl);
-            // console.log(infoResponse);
-            if (infoResponse.data.Note) {
-                return dispatch({ type: "errorMessage", payload: "Server error. Please try again later." })
-            }
-            if (!infoResponse.data.Symbol) {
-                return dispatch({ type: "errorMessage", payload: `We could not find any data for "${state.symbol}". Please check your input and try again.` })
-            }
-            dispatch({ type: "companyInfo", payload: infoResponse.data });
-
-            handleRequest(state.dataChunk);
-
-            dispatch({ type: "symbol", payload: "" });
-
-        } catch (error) {
-            console.log(error);
-        }
-    }, [state.symbol, state.dataChunk]);
-
-    const handleSymbolChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        return dispatch({ type: "symbol", payload: event.target.value });
-    };
-
-    const clearErrorMessage = () => {
-        dispatch({ type: "errorMessage", payload: "" })
-    }
-
-    const handleRequest = async (chunk: string) => {
-        const todayUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${state.symbol}&interval=15min&apikey=${apiKey}`;
-        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${state.symbol}&apikey=${apiKey}`
-        let response;
-        try {
-            switch (state.dataChunk) {
+            let response;
+            switch (chunk) {
                 case "lastDay": {
-
-                    response = await axios.get(todayUrl);
-
-
-                    if (!response.data["Time Series (15min)"]) {
+                    response = await axios.get(oneDayUrl);
+                    console.log(response.data);
+                    if (!response.data["Time Series (15min)"] || !response.data || response.data.note) {
                         dispatch({ type: "errorMessage", payload: "Data could not be retrieved. Please try again later" });
                     }
-
                     let dataToMap = [];
-                    const dates: number[] = [];
                     for (let key in response.data["Time Series (15min)"]) {
-                        dates.push(new Date(key).getTime());
                         dataToMap
                             .push({ date: new Date(key), value: +response.data["Time Series (15min)"][key]["4. close"] });
                     }
                     // get the last day (previous day) from the response and filter array
-                    const maxDate = new Date(Math.max(...dates));
+                    const maxDate = new Date(response.data["Meta Data"]["3. Last Refreshed"]);
+
                     dataToMap = dataToMap.filter(entry => entry.date.getDate() === maxDate.getDate());
-
-                    // add the last price from previous day to state.companyInfo
-                    const prevClose = dataToMap.find(el => el.date.toString() === maxDate.toString());
-                    if (prevClose) dispatch({ type: "companyInfo", payload: { prevClose: prevClose.value.toFixed(2) } })
-
                     mapDataChunk(dataToMap);
+                    break;
+                }
+                case "fiveDays": {
+                    response = await axios.get(fiveDaysUrl);
+                    if (!response.data["Time Series (60 min)"] || !response.data || response.data.note) {
+                        dispatch({ type: "errorMessage", payload: "Data for the last five days could not be retrieved. Please try again later" });
+                    }
+                    console.log(response.data);
                     break;
                 }
                 default:
                     return;
             }
         } catch (e) {
-            if (e) dispatch({ type: "errorMessage", payload: "We could not retrieve any data. Please try again later." })
+            dispatch({ type: "errorMessage", payload: e.message })
         }
+    }, [state.companyInfo.Symbol, state.symbol])
+
+    const getData = useCallback(async (event): Promise<void> => {
+        event.preventDefault();
+        const infoUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${state.symbol}&apikey=${apiKey}`;
+        const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${state.symbol}&apikey=lajsdalksdjd`; // check key later
+        try {
+            const infoResponse = await axios.get(infoUrl);
+            const quoteResponse = await axios.get(quoteUrl);
+            if (infoResponse.data.Note || quoteResponse.data.Note) {
+                console.log(infoResponse.data, quoteResponse.data);
+                return dispatch({ type: "errorMessage", payload: "Server error. Please try again later." })
+            }
+            if (!infoResponse.data.Symbol || !quoteResponse.data["Global Quote"]) {
+                return dispatch({ type: "errorMessage", payload: `We could not find any data for "${state.symbol}". Please check your input and try again.` })
+            }
+            dispatch({ type: "companyInfo", payload: { ...infoResponse.data, ...quoteResponse.data["Global Quote"] } });
+        } catch (error) {
+            dispatch({ type: "errorMessage", payload: error.message })
+        }
+        dispatch({ type: "symbol", payload: "" });
+    }, [state.symbol]);
+
+    const handleSymbolChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        return dispatch({ type: "symbol", payload: event.target.value });
+    };
+
+    const handleSymbolSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        getData(event);
+        handleRequest("lastDay");
     }
 
-    console.log(state.companyInfo)
+    const clearErrorMessage = () => {
+        dispatch({ type: "errorMessage", payload: "" })
+    }
+
+    useEffect(() => {
+        // focus on input on page load
+        const node = inputRef.current;
+        if (node) node.focus();
+    }, [])
+
     return (<main>
         <Backdrop show={!!state.errorMessage} onClick={clearErrorMessage} />
         <Modal show={!!state.errorMessage} ><p>{state.errorMessage}</p>
@@ -179,8 +193,9 @@ const Display: React.FC<DisplayProps> = () => {
                 onClick={clearErrorMessage}
             >Close</button>
         </Modal>
-        <form className={styles.searchForm} onSubmit={e => getData(e)}>
+        <form className={styles.searchForm} onSubmit={e => handleSymbolSubmit(e)}>
             <input
+                ref={inputRef}
                 required
                 maxLength={20}
                 type="text"
@@ -190,15 +205,18 @@ const Display: React.FC<DisplayProps> = () => {
             <button className={styles.searchBtn}>Search</button>
         </form>
         <section className={styles.chartContainer}>
-            {state.companyInfo.Symbol && state.companyInfo.prevClose &&
-                <React.Fragment>
+            {state.companyInfo.Symbol ?
+                <React.Fragment >
+                    <ChartNav
+                        handleRequest={handleRequest}
+                        dataChunk={state.dataChunk}
+                    />
+                    <Chart data={state.chartData} />
                     <CompanyInfo
                         info={state.companyInfo}
                     />
-                    <ChartNav handleRequest={handleRequest} dataChunk={state.dataChunk} />
-                </React.Fragment>}
-
-            <Chart data={state.chartData} />
+                </React.Fragment > :
+                <p style={{ textAlign: "center" }}>Search by company symbol to visualize stock data</p>}
         </section>
     </main >)
 }

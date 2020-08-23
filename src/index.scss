@@ -1,3 +1,5 @@
+@import "./styles/variables";
+
 *,
 *::before,
 *::after {
@@ -26,4 +28,29 @@ h2,
 h3,
 h4 {
   margin: 0;
+}
+// to keep the footer in the right place
+.app {
+  position: relative;
+  min-height: 100vh;
+}
+
+.content {
+  padding-bottom: $footerHeight;
+}
+
+.appFooter {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: $footerHeight;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid $borderColor;
+  box-shadow: 0 0 7px $shadowColor;
+  p {
+    text-align: center;
+  }
 }

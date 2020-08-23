@@ -16,9 +16,9 @@ const Chart = ({ data }: ChartProps) => {
     const tooltipRef = useRef(null);
 
     const margin = {
-        top: 10,
+        top: 20,
         right: 30,
-        bottom: 40,
+        bottom: 30,
         left: 50
     }
     const width = 800;
@@ -72,7 +72,7 @@ const Chart = ({ data }: ChartProps) => {
 
     useEffect(() => { if (data) draw(data) }, [data, draw]);
 
-    // console.log(data);
+    console.log(data);
 
     return <svg
         className={styles.chart}

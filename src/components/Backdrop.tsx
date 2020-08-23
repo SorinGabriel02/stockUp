@@ -10,7 +10,11 @@ interface BackdropProps {
 const Backdrop = ({ show, onClick }: BackdropProps) => {
     const handleClick = () => onClick();
 
-    return <div className={styles.backdrop} style={{ display: show ? "block" : "none" }} onClick={handleClick}></div>
+    return <div
+        className={styles.backdrop}
+        style={{ display: show ? "block" : "none" }}
+        onClick={handleClick}
+    ></div>
 }
 
 export default Backdrop;

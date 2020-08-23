@@ -5,7 +5,7 @@ import styles from "./CompanyInfo.module.scss";
 interface InfoProps {
     info: {
         Name: string;
-        prevClose: string;
+        ["08. previous close"]: string;
         Currency: string;
         Exchange: string;
         Symbol: string;
@@ -17,6 +17,7 @@ interface InfoProps {
 }
 
 const CompanyInfo = ({ info }: InfoProps) => {
+    const prevClose = Number(info["08. previous close"]).toFixed(2);
     const high = Number(info["52WeekHigh"]).toFixed(2);
     const low = Number(info["52WeekLow"]).toFixed(2);
     const fiftyMA = Number(info["50DayMovingAverage"]).toFixed(2);
@@ -26,7 +27,7 @@ const CompanyInfo = ({ info }: InfoProps) => {
         <div className={styles.info}>
             <div className={styles.infoHeading}>
                 <h3>{info.Name}</h3>
-                <h3 className={styles.price}>{info.prevClose + " " + info.Currency}<span>(previous close)</span></h3>
+                <h3 className={styles.price}>{prevClose + " " + info.Currency}<span>(prev close)</span></h3>
             </div>
             <ul>
                 <li><p>{info.Exchange}:{info.Symbol}</p></li>
